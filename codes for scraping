@@ -1,0 +1,65 @@
+# import functions from external packages
+import requests 
+import bs4 as bs 
+# we creat nine lists to store the information we want to extract from GTD.
+dates=[]
+countries=[]
+fatalities=[]
+injured=[]
+target_types=[]
+pages = [str(i) for i in range(1,1916)]  #modify the range according to the results
+values = ['white','dark-gray']
+for i in pages:
+#     begin the crawling
+    print('crawing page'+i)
+    source = requests.get('https://www.start.umd.edu/gtd/search/Results.aspx?expanded=yes&casualties_type=&casualties_max=&success=yes&ob=GTDID&od=desc&page='+i+'&count=100')
+#     find information from the webpage
+    source.encoding = 'utf-8'
+    soup = bs.BeautifulSoup(source.content , features='html.parser') 
+    containers = soup.find_all('table', attrs={'class': 'results'})
+    for table in containers:
+        for v in values:
+            for row in table.find_all('tr',attrs={'class': v}):
+                date = row.select('td:nth-of-type(2)')[0].text
+                print("date")
+                print(date)
+                dates.append(date)
+            
+            for row in table.find_all('tr',attrs={'class': v}):
+                country = row.select('td:nth-of-type(3)')[0].text
+                print("country")
+                print(country)
+                countries.append(country)
+           
+            for row in table.find_all('tr',attrs={'class':v}):
+                fatality = row.select('td:nth-of-type(6)')[0].text
+                print("fatality")
+                print(fatality)
+                fatalities.append(fatality)
+            for row in table.find_all('tr',attrs={'class': v}):
+                injury = row.select('td:nth-of-type(7)')[0].text
+                print("injury")
+                print(injury)
+                injured.append(injury)
+            for row in table.find_all('tr',attrs={'class':v}):
+                target = row.select('td:nth-of-type(8)')[0].text
+                print("target")
+                print(target)
+                target_types.append(target)
+# build a dict data structure called dictionary
+dictionary = {
+    'dates': dates,
+    'countries': countries,
+    'groups': groups,
+    'fatalities': fatalities,
+    'injured': injured,
+    'target_types': target_types,
+    'regions': regions,
+    'regions': regions,
+    'attack_types': attack_types,
+    'weapon_types': weapon_types}
+  
+# insert the dictionary into a data structure called dataframe 
+import pandas as pd
+df = pd.DataFrame.from_dict(dictionary, orient ='index').transpose()
+df.to_csv('GTD.csv')
