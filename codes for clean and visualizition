@@ -1,0 +1,300 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
+# read data from file
+df = pd.read_csv('GTD.csv', encoding = 'utf8',index_col=0)
+df.tail(50)
+# date clean process
+#clean the dataset
+#remove some useless columns
+to_drop = ['groups',
+           'regions']
+df.drop(columns=to_drop, inplace=True) 
+#find the date of 911 event
+df.loc[118361]
+#select data from 2001-09-11 to 2018-12-31
+df.drop(df.index[118361:], inplace=True)
+# delete all the Unknown values
+df=df[~df['fatalities'].isin(['Unknown'])]
+df=df[~df['injured'].isin(['Unknown'])]
+df=df[~df['target_types'].isin(['Unknown'])]
+df=df[~df['attack_types'].isin(['Unknown'])]
+df=df[~df['weapon_types'].isin(['Unknown'])]
+#only select the value of year
+df['dates'] = df['dates'].str.slice(0,4,1)
+#rename the dates to years
+df.rename(columns={'dates':'year'},inplace=True)
+#change str to number
+df['fatalities'] = pd.to_numeric(df['fatalities'])
+df['injured'] = pd.to_numeric(df['injured'])
+df
+# Stat by year
+# count the times of Terrorism by year and draw a figure
+year_df = df.groupby(by = 'year')[['countries']].count()
+year_dfnew = pd.DataFrame(year_df)
+a3=["2001","2002","2003","2004","2005","2006","2007","2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018"]
+year_dfnew['year'] =a3
+year_dfnew
+year_dfnew[['year','countries']].plot(kind='line',
+                                  x= 'year',
+                                  y='countries',
+                                  #title='Times of Terrorism across Year around the World',
+                                  legend=False,
+                                  figsize=(13,6))
+plt.xticks(range(18),('2001', '2002','2003', '2004','2005', '2006','2007', '2008','2009', '2010','2011', '2012','2013', '2014','2015', '2016','2017', '2018'))
+x=np.arange(0,18)
+y=year_dfnew.countries
+for x,y in zip(x,y):
+    plt.text(x,y+0.8,'%.0f'%y, ha='center', va='bottom', fontsize=10)
+
+
+plt.savefig("./t1.png")
+year_df = df.groupby(by = 'countries')[['year']].count()
+yearnew = year_df.reset_index()
+yearnew.columns = ['countries', 'times']
+yearnew
+# draw a map to see terrorist incidents concentrated in which regions.
+fig = px.scatter_geo(yearnew,locations='countries', locationmode='country names',color='countries',size='times',size_max=25,
+                     title='Times of terrorist attacks worldwide')
+fig.update_layout(geo=go.layout.Geo(showcountries=True))
+#fig.write_image("./Times of terrorist attacks worldwide.png",scale=10)
+fig.show()
+# Stat by country
+# The top 10 countries where terrorism occurs most frequently
+country_top10 = df['countries'].value_counts(ascending=True).tail(10)
+country_top10.plot(kind='barh',figsize=(10,6),color=(1,0,0))
+# count the times of Terrorism in Iraq by year and draw a figure
+Iran_df = df[df['countries'] == 'Iraq'].groupby(by = 'year')[['countries']].count()
+Iran_df = pd.DataFrame(Iran_df)
+a3=["2002","2003","2004","2005","2006","2007","2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018"]
+Iran_df['year'] =a3
+Iran_df
+fig = plt.figure(figsize=(10,6),dpi=80)
+Iran_df[['year','countries']].plot(kind='line',
+                                  x= 'year',
+                                  y='countries',
+                                  title='Times of Terrorism across Year in Iraq',
+                                  legend=False,
+                                  figsize=(15,6))
+plt.xticks(range(17),( '2002','2003', '2004','2005', '2006','2007', '2008','2009', '2010','2011', '2012','2013', '2014','2015', '2016','2017', '2018'))
+plt.xticks(rotation=-40)
+x=np.arange(0,17)
+y=Iran_df.countries
+for x,y in zip(x,y):
+    plt.text(x,y+0.8,'%.0f'%y, ha='center', va='bottom', fontsize=12)
+
+#plt.savefig("./t1.png")
+plt.show()
+# count the times of Terrorism in Afghanistan by year and draw a figure
+Iran_df = df[df['countries'] == 'Afghanistan'].groupby(by = 'year')[['countries']].count()
+Iran_df = pd.DataFrame(Iran_df)
+a3=['2001',"2002","2003","2004","2005","2006","2007","2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018"]
+Iran_df['year'] =a3
+Iran_df
+
+Iran_df[['year','countries']].plot(kind='line',
+                                  x= 'year',
+                                  y='countries',
+                                  title='Times of Terrorism across Year in Afghanistan',
+                                  figsize=(15,6),
+                                  legend=False)
+plt.xticks(range(18),( '2001','2002','2003', '2004','2005', '2006','2007', '2008','2009', '2010','2011', '2012','2013', '2014','2015', '2016','2017', '2018'))
+plt.xticks(rotation=-40)
+x=np.arange(0,18)
+y=Iran_df.countries
+for x,y in zip(x,y):
+    plt.text(x,y+0.8,'%.0f'%y, ha='center', va='bottom', fontsize=12)
+
+plt.show()
+# count the times of Terrorism in Iran by year and draw a figure
+Iran_df = df[df['countries'] == 'Iran'].groupby(by = 'year')[['countries']].count()
+Iran_df = pd.DataFrame(Iran_df)
+a3=["2004","2005","2006","2007","2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018"]
+Iran_df['year'] =a3
+Iran_df
+fig = plt.figure(figsize=(10,6),dpi=80)
+Iran_df[['year','countries']].plot(kind='line',
+                                  x= 'year',
+                                  y='countries',
+                                  title='Times of Terrorism across Year in Iran',
+                                  legend=False,
+                                  figsize=(15,6))
+plt.xticks(range(15),( '2004','2005', '2006','2007', '2008','2009', '2010','2011', '2012','2013', '2014','2015', '2016','2017', '2018'))
+plt.xticks(rotation=-40)
+x=np.arange(0,15)
+y=Iran_df.countries
+for x,y in zip(x,y):
+    plt.text(x,y+0.1,'%.0f'%y, ha='center', va='bottom', fontsize=12)
+#plt.savefig("./t1.png")
+plt.show()
+# count the times of Terrorism in USA by year and draw a figure
+Iran_df = df[df['countries'] == 'United States'].groupby(by = 'year')[['countries']].count()
+Iran_df = pd.DataFrame(Iran_df)
+a3=['2001',"2002","2003","2004","2005","2006","2007","2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018"]
+Iran_df['year'] =a3
+Iran_df
+fig = plt.figure(figsize=(10,6),dpi=80)
+Iran_df[['year','countries']].plot(kind='line',
+                                  x= 'year',
+                                  y='countries',
+                                  title='Times of Terrorism across Year in U.S.A',
+                                  legend=False,
+                                  figsize=(15,6))
+plt.xticks(range(18),( '2001','2002','2003', '2004','2005', '2006','2007', '2008','2009', '2010','2011', '2012','2013', '2014','2015', '2016','2017', '2018'))
+#plt.xlabel()
+plt.xticks(rotation=-40)
+x=np.arange(0,18)
+y=Iran_df.countries
+for x,y in zip(x,y):
+    plt.text(x,y+0.2,'%.0f'%y, ha='center', va='bottom', fontsize=12)
+#plt.savefig("./t1.png")
+plt.show()
+# Stat by fatalities&injured
+df_fatalities = df.groupby(by = 'year')[['fatalities']].sum()
+df_injured = df.groupby(by = 'year')[['injured']].sum()
+# design style
+plt.style.use('ggplot')
+
+fig = plt.figure(figsize=(10,6))
+
+plt.plot(
+         df_fatalities, # data
+         linestyle = '-', 
+         linewidth = 2, 
+         color = 'red', # red for fatalities
+         marker = 'o', 
+         markersize = 6, 
+         markeredgecolor='black', 
+         markerfacecolor='brown') 
+plt.plot(
+         df_injured, 
+         linestyle = '-', 
+         linewidth = 2, 
+         color = 'blue', # blue for injured
+         marker = '*',
+         markersize = 6, 
+         markeredgecolor='black',
+         markerfacecolor='brown') 
+# add title and labels
+plt.title('The number of fatalities and injured caused by terrorism from 2001 to 2018')
+plt.xlabel('Year')
+plt.ylabel('Number')
+
+# Eliminate the ticks on the top and right 
+plt.tick_params(top = 'off', right = 'off')
+
+fig.autofmt_xdate(rotation = -40)  
+
+plt.show()
+#国家与平均死亡or受伤人数并重新排序
+Coun_df = df.groupby('countries').mean()
+Coun_dfnew = Coun_df.reset_index()
+Coun_dfnew
+#Ten Countries with the Highest Average Number of Injuries in Terrorist Incidents
+Coun_dfnew1=Coun_dfnew.sort_values(by=["injured"],ascending = False ).head(10)
+plt.figure(figsize=(12,4.8))
+plt.bar(x = Coun_dfnew1.countries,height = Coun_dfnew1.injured,width=0.5)
+x=np.arange(0,10)
+y=Coun_dfnew1.injured
+plt.ylabel('Injured Number',fontsize=15,labelpad=20)
+#plt.title('Ten countries with the highest average number of injuries in terrorist incidents',fontsize=15)
+for x,y in zip(x,y):
+    plt.text(x,y+0.2,'%.0f'%y, ha='center', va='bottom', fontsize=10)
+plt.savefig("./t3.png")
+plt.show()
+#Ten Countries with the Highest Average Number of fatalities in Terrorist Incidents
+Coun_dfnew2=Coun_dfnew.sort_values(by=["fatalities"],ascending = False ).head(10)
+plt.figure(figsize=(13,7))
+plt.bar(x = Coun_dfnew2.countries,height = Coun_dfnew2.fatalities,width=0.5)
+x=np.arange(0,10)
+y=Coun_dfnew2.fatalities
+plt.ylabel('Fatalities Number',fontsize=15,labelpad=20)
+#plt.title('xxxx',fontsize=12)
+plt.xticks(rotation=45)
+for x,y in zip(x,y):
+    plt.text(x,y+0.1,'%.0f'%y, ha='center', va='bottom', fontsize=12)
+plt.savefig("./t4.png")
+plt.show()
+Stat by target types
+#攻击类型与平均死亡和平均受伤并重新排序
+TT_df = df.groupby('target_types').mean()
+TT_dfnew = TT_df.reset_index()
+TT_dfnew
+#排名前十的死亡最多攻击方式
+#Because the name of the weapon is so long,we decided to use excel to draw a bar chart.
+TT_dfnew1=TT_dfnew.sort_values(by=["fatalities"],ascending = False ).head(10)
+plt.figure(figsize=(15,5))
+plt.bar(x = TT_dfnew1.target_types,height = TT_dfnew1.fatalities,width=0.5)
+x=np.arange(0,10)
+y=TT_dfnew1.fatalities
+plt.ylabel('Deaths Number',fontsize=12,labelpad=20)
+#plt.title('xxxx',fontsize=12)
+plt.xticks(rotation=90)
+for x,y in zip(x,y):
+    plt.text(x,y+0.1,'%.0f'%y, ha='center', va='bottom', fontsize=11)
+plt.show()
+#排名前十的受伤最多攻击方式并画图
+#Because the name of the weapon is so long,we decided to use excel to draw a bar chart.
+TT_dfnew2=TT_dfnew.sort_values(by=["injured"],ascending = False ).head(10)
+plt.figure(figsize=(15,5))
+plt.bar(x = TT_dfnew2.target_types,height = TT_dfnew2.injured,width=0.5)
+x=np.arange(0,10)
+y=TT_dfnew2.injured
+plt.ylabel('Injured Number',fontsize=12,labelpad=20)
+#plt.title('xxxx',fontsize=12)
+plt.xticks(rotation=90)
+for x,y in zip(x,y):
+    plt.text(x,y+0.1,'%.0f'%y, ha='center', va='bottom', fontsize=11)
+plt.show()
+#排名前十的发生最多次的攻击方式并排序
+TTcoun_df = df.groupby('target_types')[['countries']].count()
+TTcoun_dfnew=TTcoun_df.sort_values(by=["countries"],ascending = False ).head(10)
+TTcoun_dfnew2=TTcoun_dfnew.reset_index()
+TTcoun_dfnew2
+plt.figure(figsize=(15,5))
+plt.bar(x = TTcoun_dfnew2.target_types,height = TTcoun_dfnew2.countries,width=0.5)
+x=np.arange(0,10)
+y=TTcoun_dfnew2.countries
+plt.ylabel('Fatalities Number',fontsize=12,labelpad=20)
+#plt.title('xxxx',fontsize=12)
+plt.xticks(rotation=45)
+for x,y in zip(x,y):
+    plt.text(x,y+0.1,'%.0f'%y, ha='center', va='bottom', fontsize=11)
+plt.show()
+# Stat by target types
+#武器类型与平均死亡和平均受伤并重新标注index
+WT_df = df.groupby('weapon_types').mean()
+WT_dfnew = WT_df.reset_index()
+WT_dfnew
+#排名前十的死亡最多攻击武器
+#Because the name of the weapon is so long,we decided to use excel to draw a bar chart.
+WT_dfnew1=WT_dfnew.sort_values(by=["fatalities"],ascending = False ).head(10)
+plt.figure(figsize=(15,5))
+plt.bar(x = WT_dfnew1.weapon_types,height = WT_dfnew1.fatalities,width=0.5)
+x=np.arange(0,10)
+y=WT_dfnew1.fatalities
+plt.ylabel('Deaths Number',fontsize=12,labelpad=20)
+#plt.title('xxxx',fontsize=12)
+plt.xticks(rotation=90)
+for x,y in zip(x,y):
+    plt.text(x,y+0.1,'%.0f'%y, ha='center', va='bottom', fontsize=11)
+plt.show()
+#排名前十的受伤最多攻击武器
+#Because the name of the weapon is so long,we decided to use excel to draw a bar chart.
+WT_dfnew2=WT_dfnew.sort_values(by=["injured"],ascending = False ).head(10)
+plt.figure(figsize=(15,5))
+plt.bar(x = WT_dfnew2.weapon_types,height = WT_dfnew2.injured,width=0.5)
+x=np.arange(0,10)
+y=WT_dfnew2.injured
+plt.ylabel('injured Number',fontsize=12,labelpad=20)
+#plt.title('xxxx',fontsize=12)
+plt.xticks(rotation=90)
+for x,y in zip(x,y):
+    plt.text(x,y+0.1,'%.0f'%y, ha='center', va='bottom', fontsize=11)
+plt.show()
+#排名前十的发生最多次的攻击武器
+#Because the name of the weapon is so long,we decided to use excel to draw a bar chart.
+WT_df = df.groupby('weapon_types').count()
+TT_df.sort_values(by=["countries"],ascending = False ).head(10)
