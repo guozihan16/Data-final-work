@@ -1,0 +1,144 @@
+Topic Modeling
+In this assignment, In the text file 'surrogacy.txt',I selected 10 articles from WeChat ,each of which is related to surrogacy. Firstly,look the title of each article:
+
+郑爽疑代孕2子，我们再来聊聊代孕
+全国人大代表朱列玉：建议有条件允许合法代孕
+代孕背后，法律与伦理
+为什么反对代孕，这次讲清楚
+代孕过程如豪赌！90万包生男孩，畸形会打掉
+中国人在国外代孕，到底违法吗？
+一个曾经允许商业代孕的大国，发生过什么？
+商业代孕，带来的是希望，还是剥削？
+在代孕合法的乌克兰，女性成了生育机器，“残次”婴儿会被丢弃
+俄罗斯每年代孕十万婴儿 是否禁止代孕引发争论
+There are 3 main concerns :
+
+代孕的法律问题
+代孕产业链
+国外的代孕
+Import data and preprocess
+# import necessary packages
+import pandas as pd
+import numpy as np
+import nltk
+​
+# import the text file
+file = open('surrogacy.txt',encoding = 'utf-8')
+# read all lines and clean data
+lines = file.readlines()
+# clean /n and empty lines
+lines = [l.strip() for l in lines]
+lines = [l for l in lines if l != ""]
+​
+len(lines)
+10
+DTM
+# introduce chinese stopwords
+stpwrdpath = 'C:\\Users\\guozihan\Desktop\\chinese.txt'
+with open(stpwrdpath, 'rb') as fp:
+    stopword = fp.read().decode('utf-8')    
+stpwrdlst = stopword.splitlines()
+# import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+​
+# convert text data to a DTM
+tf_vectorizer = CountVectorizer(stop_words = stpwrdlst)
+dtm_epl = tf_vectorizer.fit_transform(lines)
+# convert the DTM to a numpy array 
+dtm_epl.toarray()
+array([[1, 1, 0, ..., 1, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 1, ..., 0, 0, 0],
+       ...,
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0],
+       [0, 0, 0, ..., 0, 0, 0]], dtype=int64)
+LDA
+# import LDA
+from sklearn.decomposition import LatentDirichletAllocation
+​
+# train LDA with 3 topics
+lda = LatentDirichletAllocation(n_components=3, random_state=0)
+​
+# fit the dtm into the lda object
+lda.fit(dtm_epl)
+LatentDirichletAllocation(n_components=3, random_state=0)
+Results
+# get the topic-word(term) association for the LDA object
+topic_word_matrix = lda.components_
+​
+# retrieve top 5 words for each topic
+no_top_words = 5
+feature_names = tf_vectorizer.get_feature_names()
+​
+# create a dataframe for displaying the results
+rows = []
+​
+for topic_id, topic in enumerate(topic_word_matrix):
+    row = ["Topic #" + str(topic_id) + ":"]
+    row += [
+        feature_names[i] + "*" + str(np.round(topic[i] / np.sum(topic), 4))
+        for i in topic.argsort()[:-no_top_words - 1:-1]
+    ]
+    rows.append(row)
+​
+topic_word_df = pd.DataFrame(rows, columns=['Topic', 'Top 1 Word*Prob', 'Top 2 Word*Prob', \
+                                            'Top 3 Word*Prob', 'Top 4 Word*Prob', 'Top 5 Word*Prob'])
+​
+topic_word_df
+Topic	Top 1 Word*Prob	Top 2 Word*Prob	Top 3 Word*Prob	Top 4 Word*Prob	Top 5 Word*Prob
+0	Topic #0:	自愿*0.0018	梅利尼科夫说*0.0018	消息报*0.0018	俄罗斯*0.0018	20*0.001
+1	Topic #1:	代妈*0.0052	人类辅助生殖技术管理办法*0.0037	上海添丁生殖集团*0.0027	天使助孕*0.0022	代孕*0.0022
+2	Topic #2:	代孕*0.0034	蓝色宝贝*0.0028	代母*0.0023	陈女士称*0.0018	刑法*0.0018
+# According to this result,
+# topic 0 = 国外的代孕
+# topic 1 = 代孕产业链
+# topic 2 = 代孕的法律问题
+The topic mixture for each document
+# document-topic matrix
+doc_topic_matrix = lda.transform(dtm_epl)
+​
+# specify the number of topics we're interested in
+no_top_topic = 2
+rows = []
+​
+# process each document
+for doc_id, doc in enumerate(doc_topic_matrix):
+    row = ['# %d' % doc_id]
+    # get the top n topics
+    row += [
+        'Topic' + str(i) + "*" + str(np.round(doc[i], 2))
+        for i in doc.argsort()[:-no_top_topic - 1:-1]
+    ]
+    rows.append(row)
+​
+doc_topic_df = pd.DataFrame(
+    rows, columns=['Document', 'Top1 Topic*Prob', 'Top2 Topic*Prob'])
+​
+doc_topic_df
+Document	Top1 Topic*Prob	Top2 Topic*Prob
+0	# 0	Topic2*1.0	Topic1*0.0
+1	# 1	Topic2*0.99	Topic0*0.0
+2	# 2	Topic1*1.0	Topic2*0.0
+3	# 3	Topic1*0.99	Topic2*0.0
+4	# 4	Topic1*1.0	Topic2*0.0
+5	# 5	Topic2*1.0	Topic1*0.0
+6	# 6	Topic0*1.0	Topic2*0.0
+7	# 7	Topic2*1.0	Topic0*0.0
+8	# 8	Topic1*1.0	Topic0*0.0
+9	# 9	Topic0*0.99	Topic2*0.0
+# Test the matching degree between the prediction results and the articles
+# P for prediction results,A for actual results
+# 郑爽疑代孕2子，我们再来聊聊代孕 P:topic 2  A: topic 1 & topic 2
+# 全国人大代表朱列玉：建议有条件允许合法代孕 P:topic 2  A: topic 2
+# 代孕背后，法律与伦理 P:topic 1  A: topic 2
+# 为什么反对代孕，这次讲清楚 P:topic 1  A: topic 2
+# 代孕过程如豪赌！90万包生男孩，畸形会打掉 P:topic 1  A: topic 1
+# 中国人在国外代孕，到底违法吗？ P:topic 2  A: topic 2
+# 一个曾经允许商业代孕的大国，发生过什么？ P:topic 0  A: topic 0
+# 商业代孕，带来的是希望，还是剥削？ P:topic 2  A: topic 1
+# 在代孕合法的乌克兰，女性成了生育机器，“残次”婴儿会被丢弃 P:topic 1  A: topic 0
+# 俄罗斯每年代孕十万婴儿 是否禁止代孕引发争论 P:topic 0  A: topic 0
+​
+# The prediction results and the articles are mostly matched.a
+# As for some of the wrong predictions,it may be that the article discusses two topics simultaneously
